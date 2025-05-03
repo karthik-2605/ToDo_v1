@@ -1,295 +1,3 @@
-/*
-const express = require("express");
-const cors = require("cors");
-const mysql = require("mysql2");
-const path = require("path");
-require("dotenv").config({path:"./.env"});
-const bcrypt = require("bcryptjs");
-const session = require("express-session"); // for getting username from the session data in adding tasks to server
-const MySQLStore = require("express-mysql-session")(session);
-
-
-//MySQL session store configuration
-const sessionStore = new MySQLStore({
-    expiration:86400000,
-    createDatabaseTable:true,
-    host:"localhost",
-    user:"root",
-    password:"9820256@MajorK",
-    database:"ToDo",
-    port: 3306
-});
-
-
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.resolve(__dirname,"..","public"),{index:false}));
-
-//Session middleware
-app.use(
-    session({
-        secret: "43562cce5a832737acbb147d9ea6932400e2708da032d69b1b1acee73915368b",
-        store:sessionStore,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure:false,
-            maxAge:86400000,
-            httpOnly:true
-        }
-    })
-);
-
-
-const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "9820256@MajorK",
-    database: "ToDo",
-    port: 3306
-})
-
-db.connect((err)=>{
-    if(err){
-        return console.error("Coonection is not establisted");
-    }
-
-    console.log("Successfully connected to MySQL!");
-})
-
-
-
-
-app.get("/",(req,res)=>{
-    res.sendFile(path.resolve(__dirname,"..","public","login.html"));
-})
-
-
-
-// LOGIN PAGE BACKEND
-
-app.post("/auth",async (req,res)=>{
-    
-    const {username, password} = req.body;
-    console.log(username, password)
-    if(!username || !password){
-        return res.status(400).json({error:"Missing fields"});
-    }
-
-    const sql = `SELECT * FROM LOGIN WHERE username='${username}'`;
-    console.log(sql);
-    db.query(sql, async (err,result)=>{
-        if(err){
-            console.error("Database query error: ",err);
-            return res.status(500).json({err:err.message});
-        }
-
-        if(result.length === 0){
-            return res.status(404).json({error:"Username does not exists! Please create an acount",redirect: "/signup"});
-        }
-        
-        const user = result[0];
-
-        try{
-            const validPassword = await bcrypt.compare(password,user.password);
-            if(!validPassword){
-                return res.status(401).json({error:"Incorrect password!"});
-            }
-
-            req.session.username = username;  // storing username in session 
-
-            return res.json({message:"Login successful!",redirect: `/todo?username=${username}`});
-
-        }catch(error){
-            console.error("Password comparision error: ",error);
-            return res.status(500).json({error:"Server error, please try again!"});
-        }
-        
-
-    });
-});
-
-
-
-// SIGN UP PAGE BACKEND
-app.post("/signup",(req,res)=>{
-    const {username, password, confirm_password} = req.body;
-    console.log(username);
-    if(!username || !password || !confirm_password){
-        return res.status(400).json({error:"All fields are required!"});
-    }
-    console.log("passed the fileds section");
-
-    if(password !== confirm_password){
-        return res.status(400).json({error:"Passwords do not match!"});
-    }
-    console.log("passed the password check");
-
-    try{
-
-        console.log("Entered the 'try'!");
-
-        const checksql = "SELECT * FROM LOGIN WHERE username = ?";
-        console.log("checked sql if any username");
-        db.query(checksql,[username],async (err,result)=>{
-            if(err){
-                return res.status(500).json({error: err.message});
-            }
-
-            if(result.length>0){
-                return res.status(400).json({error: "Username already exists!"});
-            }
-
-            const hashedPassword = await bcrypt.hash(password,10);
-            const updateSql = "INSERT INTO LOGIN (username,password) VALUES (?,?)";
-            db.query(updateSql,[username,hashedPassword],(err,result)=>{
-                if(err){
-                    return res.status(500).json({error:err.message});
-
-                }
-
-                // Automatically log in user after signup
-                req.session.username = username;
-                res.json({message:"Signup successful",redirect:`/todo?username=${username}`});
-            })
-        })
-
-    }catch(error){
-        res.status(500).json({error:"Server error, please try again!"});
-    }
-
-
-})
-
-
-
-
-
-// SEINDING MAIN PAGE ToDo data to SERVER
-
-
-app.get("/todo")
-
-
-
-app.get("/todo",(req,res)=>{
-    res.sendFile(path.resolve(__dirname,"..","public","index.html"));
-});
-
-
-
-app.get("/signup",(req,res) => {
-    res.sendFile(path.resolve(__dirname, "..","public","signup.html"));
-})
-
-
-
-
-// Backend functionality for Tasks
-app.post("/add-task",(req,res)=>{
-    const {task} = req.body;
-    const username = req.session.username;
-
-    console.log(username);
-
-    if(!username){
-        return res.status(401).json({error:"Unauthorized"});
-    }
-
-    if(!task){
-        return res.status(400).json({error:"Task is required"});
-    }
-
-    const sql = "SELECT id FROM LOGIN WHERE username = ?";
-
-    db.query(sql,[username],(err,result)=>{
-        if(err){
-            return res.status(500).json({error:err.message});
-        }
-
-        const userId = result[0].id;
-        const add_sql = "INSERT INTO TASKS (user_id,task) VALUES (?,?)";
-        db.query(add_sql,[userId,task],(err,result)=>{
-            if(err){
-                res.status(500).json({error:err.message});
-            }
-            res.json({message:"Task added successfully"});
-        })
-
-    })
-})
-
-
-//FETCH TASKS
-
-app.get("/get-tasks", (req, res) => {
-    const username = req.session.username;
-
-    if (!username) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const sqlGetUser = "SELECT id FROM LOGIN WHERE username = ?";
-    db.query(sqlGetUser, [username], (err, userResult) => {
-        if (err || userResult.length === 0) {
-            return res.status(500).json({ error: "Failed to get user ID" });
-        }
-
-        const userId = userResult[0].id;
-        const sqlQuery = "SELECT id, task, status FROM TASKS WHERE user_id = ?";
-
-        db.query(sqlQuery, [userId], (err, taskResults) => {
-            if (err) {
-                return res.status(500).json({ error: "Failed to get tasks" });
-            }
-            res.json(taskResults);
-        });
-    });
-});
-
-
-
-
-
-
-//DELETE TASKS
-app.delete("/delete-task/:id",(req,res)=>{
-    const taskId = req.params.id;
-    const username = req.session.username;
-    console.log(taskId);
-
-    if(!username){
-        res.status(401).json({error:"Unauthorized"});
-    }
-
-    const delete_sql = "DELETE FROM TASKS WHERE id = ? ";
-
-    db.query(delete_sql, [taskId], (err,result)=>{
-        if(err){
-            return res.status(500).json({error: err.message});
-        }
-
-        res.json({message: "Task deleted successfully!"});
-    })
-})
-
-
-
-
-app.listen(3000,()=>{
-    console.log("Successfully running on port 3000!");
-})
-
-
-*/
-
-
-
-
-
-
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
@@ -307,19 +15,19 @@ app.use(express.static(path.resolve(__dirname,"..","public")));
 
 // session
 const sessionStore = new MySQLStore({
-    host:"localhost",
-    user:"root",
+    host://*//,
+    user://*//,
     createDatabaseTable:true,
     expiration:86400000,
-    database:"ToDo",
-    password:"9820256@MajorK",
-    port:3306,
+    database://*//,
+    password://*//,
+    port://*//,
 })
 
 
 app.use(
     session({
-        secret:"43562cce5a832737acbb147d9ea6932400e2708da032d69b1b1acee73915368b",
+        secret:/**/,
         store:sessionStore,
         saveUninitialized:false,
         resave:false,
@@ -334,11 +42,11 @@ app.use(
 
 
 const db = mysql.createConnection({
-    host:"localhost",
-    user:"root",
-    password:"9820256@MajorK",
-    database:"ToDo",
-    port:3306
+    host:/**/,
+    user:/**/,
+    password:/**/,
+    database:/**/,
+    port:/**/
 })
 
 db.connect((err)=>{
