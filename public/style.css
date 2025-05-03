@@ -1,0 +1,145 @@
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+.container{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f5f5f5;
+    font-family: 'Poppins', sans-serif;
+}
+
+
+.container_sub{
+    max-width: 700px;
+    width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: #ffff;
+    padding: 20px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+.heading{
+    font-size: 16px;
+    text-align: center;
+}
+
+.toDoAdd{
+    width: 100%;
+}
+
+.toDoAdd form{
+    display: flex;
+    width: 100%;
+    gap: 10px;
+
+}
+
+
+.toDoAdd form input{
+    font-size: 14px;
+    padding: 14px;
+    outline: none;
+    border-radius: 8px;
+    border: 1.8px solid #f5f5f5;
+    width: 600px;
+    transition: 0.3s ease-in-out;
+}
+
+.toDoAdd input:focus{
+    border-color:#007bff;
+}
+
+.toDoAdd form button{
+    padding: 0px 20px;
+    border-radius: 10px;
+    border: none;
+    background-color: #007bff;
+    color: #ffff;
+    transition: 0.1s ease-in-out;
+    cursor: pointer;
+}
+
+.toDoAdd button:hover{
+    background: #0056b3;
+}
+
+
+.filterTasks{
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.filterTasks select{
+    outline: none;
+    border: 2px solid #f5f5f5;
+    padding: 4px;
+    border-radius: 15px;
+}
+
+
+.filterTasks label{
+    font-size: 14;
+}
+
+
+.taskContainer{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    
+}
+
+.taskItem{
+    display: flex;
+    justify-content: space-between;
+    background: white;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    width: 400px;
+}
+
+.taskItem button i{
+    outline: none;
+    background-color: #ffff;
+    border: none;
+    padding: 5px;
+    color: red;
+}
+
+.taskItem button{
+    outline: none;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.1s ease-in-out;
+}
+
+.taskItem button:hover i{
+    color: #c20000;
+    transition: color 0.2s ease-in-out;
+}
+.taskItem span{
+    flex:1;
+    margin-left: 13px;
+}
+
+
+
+.greeting_name{
+    color:#007bff;
+}

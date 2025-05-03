@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Signup</title>
+    <link rel="stylesheet" href="./login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container_signup">
+        <div class="container_signup_div">
+            <div class="signup_heading">
+                <h1>Login</h1>
+            </div>
+
+            <div class="submit_form">
+                <form id = "login_form">
+                    <label for="usrname">Your Username:</label>
+                    <input type="text" class="text_input" name="username" id="usrname" placeholder="Enter username" required>
+
+                    <label for="psw">Password:</label>
+                    <input type="password" class="text_input" name="password" id="psw" placeholder="Enter password" required>
+
+                    <button type="submit" id="continue_btn">Continue</button>
+                </form>
+            </div>
+
+            <div class="createNew">
+                <a href="#">Forgot password?</a>
+                <p>Don't have an account? <a href="./signup.html">Create your Account</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script src="./app.js"></script>
+</html>
